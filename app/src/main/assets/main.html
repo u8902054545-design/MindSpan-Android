@@ -574,5 +574,17 @@
 
         window.onload = generateCalendar;
     </script>
+<div id="navbar-placeholder"></div>
 </body>
 </html>
+<script>
+  // Функция для подгрузки навигации
+  fetch('navbar.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('navbar-placeholder').innerHTML = data;
+      // Инициализируем подсветку активной кнопки (Главная)
+      const homeBtn = document.querySelector('[onclick*="main.html"]');
+      if(homeBtn) homeBtn.classList.add('active');
+    });
+</script>

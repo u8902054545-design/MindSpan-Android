@@ -1,194 +1,23 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Material 3 Navigation</title>
-    <!-- Подключение Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Подключение Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    
-    <style>
-        /* Установка шрифта Inter */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0F0F0F; /* Сохранен цвет фона */
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden; /* Убираем скролл, так как контента нет */
-            
-            /* Запрет выделения */
-            -webkit-user-select: none; 
-            -ms-user-select: none; 
-            user-select: none; 
-            
-            /* Центрирование сообщения о пустоте */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+<nav class="fixed bottom-0 left-0 right-0 bg-[#1e1f20]/90 backdrop-blur-lg border-t border-white/5 pb-6 pt-3 px-6 flex justify-between items-center z-50">
+    <button onclick="location.href='main.html'" class="nav-item flex flex-col items-center gap-1 opacity-60 transition-all">
+        <span class="material-symbols-rounded text-[28px]">home</span>
+        <span class="text-[10px] font-medium">Главная</span>
+    </button>
+    <button onclick="location.href='schedule.html'" class="nav-item flex flex-col items-center gap-1 opacity-60 transition-all">
+        <span class="material-symbols-rounded text-[28px]">calendar_month</span>
+        <span class="text-[10px] font-medium">График</span>
+    </button>
+    <button onclick="location.href='404.html'" class="nav-item flex flex-col items-center gap-1 opacity-60 transition-all">
+        <span class="material-symbols-rounded text-[28px]">payments</span>
+        <span class="text-[10px] font-medium">Выплаты</span>
+    </button>
+    <button onclick="location.href='404.html'" class="nav-item flex flex-col items-center gap-1 opacity-60 transition-all">
+        <span class="material-symbols-rounded text-[28px]">person</span>
+        <span class="text-[10px] font-medium">Профиль</span>
+    </button>
+</nav>
 
-        /* --- Улучшенная Панель Навигации (Material 3 Style) --- */
-        .nav-bar {
-            background-color: #1F1F1F; /* Сохранен цвет панели */
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            /* Мягкая тень для глубины */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); 
-            height: 80px; /* Немного выше для M3 стиля */
-            padding-bottom: 0;
-        }
-
-        .nav-item {
-            position: relative;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            outline: none;
-            /* Убираем подсветку при тапе на мобильных */
-            -webkit-tap-highlight-color: transparent; 
-        }
-
-        /* Контейнер иконки (M3 Pill Indicator) */
-        .icon-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 64px; /* Широкая таблетка (M3 style) */
-            height: 32px;
-            border-radius: 16px; /* Полное скругление */
-            transition: background-color 0.3s cubic-bezier(0.2, 0.0, 0, 1.0), color 0.3s ease;
-            margin-bottom: 4px;
-        }
-
-        /* Текст под иконкой (Label) */
-        .nav-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #C4C7C5;
-            transition: color 0.2s;
-            letter-spacing: 0.3px;
-        }
-
-        /* SVG Иконки */
-        .nav-item svg {
-            color: #C4C7C5; 
-            transition: color 0.2s;
-            width: 24px;
-            height: 24px;
-        }
-
-        /* --- Активное состояние (Active State) --- */
-        .nav-item.active .icon-container {
-            background-color: #0000FF; /* Сохранен синий цвет */
-        }
-
-        .nav-item.active svg {
-             color: #FFFFFF; /* Белая иконка на синем фоне */
-        }
-
-        .nav-item.active .nav-label {
-            color: #FFFFFF; /* Белый текст */
-        }
-
-        /* Эффект нажатия (Ripple emulation) */
-        .nav-item:active .icon-container {
-            transform: scale(0.95);
-        }
-        
-    </style>
-</head>
-<body>
-
-    <!-- Пустое пространство (Placeholder) -->
-    <div class="text-gray-600 text-sm opacity-20 select-none">
-        Контент удален
-    </div>
-
-    <!-- 
-      Нижняя Навигационная Панель 
-      Стилизована под Google Material 3 
-    -->
-    <nav class="nav-bar fixed bottom-0 left-0 w-full z-50">
-        <div class="flex justify-between items-center h-full max-w-lg mx-auto px-2">
-
-            <!-- 1. Главный -->
-            <button class="nav-item active" onclick="setActive(this)">
-                <div class="icon-container">
-                    <i data-lucide="home"></i>
-                </div>
-                <span class="nav-label">Главный</span>
-            </button>
-
-            <!-- 2. Слоты (Бывшее Расписание) -->
-            <button class="nav-item" onclick="setActive(this)">
-                <div class="icon-container">
-                    <!-- Используем иконку, похожую на слоты/время -->
-                    <i data-lucide="calendar-range"></i>
-                </div>
-                <span class="nav-label">Слоты</span>
-            </button>
-            
-            <!-- 3. Файлы (Вместо Местоположения) - M3 Style -->
-            <button class="nav-item" onclick="setActive(this)">
-                <div class="icon-container">
-                    <i data-lucide="folder-open"></i>
-                </div>
-                <span class="nav-label">Файлы</span>
-            </button>
-
-            <!-- 4. Выплаты -->
-            <button class="nav-item" onclick="setActive(this)">
-                <div class="icon-container">
-                    <i data-lucide="credit-card"></i>
-                </div>
-                <span class="nav-label">Выплаты</span>
-            </button>
-
-            <!-- 5. Обучение -->
-            <button class="nav-item" onclick="setActive(this)">
-                <div class="icon-container">
-                    <i data-lucide="graduation-cap"></i>
-                </div>
-                <span class="nav-label">Обучение</span>
-            </button>
-
-            <!-- 6. Чаты -->
-            <button class="nav-item" onclick="setActive(this)">
-                <div class="icon-container">
-                    <i data-lucide="message-square-more"></i>
-                </div>
-                <span class="nav-label">Чаты</span>
-            </button>
-        </div>
-    </nav>
-
-    <script>
-        // Инициализация иконок
-        lucide.createIcons();
-
-        // Логика переключения меню
-        function setActive(element) {
-            // Удаляем класс active у всех кнопок
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Добавляем класс active нажатой кнопке
-            element.classList.add('active');
-            
-            // Вибрация (Haptic Feedback) для мобильных устройств (если поддерживается)
-            if (navigator.vibrate) {
-                navigator.vibrate(10);
-            }
-        }
-    </script>
-</body>
-</html>
+<style>
+    .nav-item.active { opacity: 1 !important; color: #D0BCFF; }
+    .nav-item.active span { font-variation-settings: 'FILL' 1; }
+</style>
