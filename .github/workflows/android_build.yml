@@ -3,8 +3,6 @@ name: Android Build
 on:
   push:
     branches: [ master, main ]
-  pull_request:
-    branches: [ master, main ]
 
 jobs:
   build:
@@ -23,11 +21,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build with AAPT and DX (Manual Build)
+      - name: Build APK
         run: |
-          # Создаем структуру для сборки
-          mkdir -p build/gen build/obj build/bin
+          # Устанавливаем переменные путей
           SDK_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
+          # Находим путь к build-tools (берем последнюю версию)
+          BUILD_TOOLS=$(ls -d ${ANDROID_HOME}/build-tools/* | tail -1)
+          PATH=$PATH:$BUILD_TOOLS
+          
+          mkdir -p build/gen build/obj build/bin
+          
+          echo "Using build-tools from: $BUILD_TOOLS"
           
           echo "Processing resources..."
           aapt package -f -m -J build/gen -S app/src/main/res -M app/src/main/AndroidManifest.xml -I $SDK_JAR
@@ -38,13 +42,11 @@ jobs:
             app/src/main/java/com/mindspan/app/MainActivity.java
           
           echo "Converting to DEX..."
+          # Используем d8 из build-tools
           d8 --output build/bin/ --lib $SDK_JAR build/obj/com/mindspan/app/*.class
           
           echo "Packaging APK..."
-          aapt package -f -M app/src/main/AndroidManifest.xml -S app/src/main/res -A app/src/main/assets -I $SDK_JAR -F build/bin/MindSpan-unsigned.apk build/bin/
-          
-          # Выравнивание и подпись (используем debug key по умолчанию для простоты)
-          mv build/bin/MindSpan-unsigned.apk MindSpan-debug.apk
+          aapt package -f -M app/src/main/AndroidManifest.xml -S app/src/main/res -A app/src/main/assets -I $SDK_JAR -F MindSpan-debug.apk build/bin/
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
