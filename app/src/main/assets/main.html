@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compact Dashboard with Spinner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .header-container {
+            background-color: #131314;
+            border-bottom-left-radius: 28px;
+            border-bottom-right-radius: 28px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Индикатор статуса */
+        .status-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            padding: 4px 10px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: pulse 2.5s infinite;
+        }
+
+        .status-active { background-color: #10b981; }
+        .status-active::after { background-color: #10b981; }
+        .status-connecting { background-color: #f59e0b; }
+        .status-connecting::after { background-color: #f59e0b; }
+        .status-disconnected { background-color: #ef4444; }
+        .status-disconnected::after { background-color: #ef4444; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            70% { transform: scale(2.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        /* Кнопка профиля */
+        .m3-profile-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #4444FF;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin-top: -4px;
+            margin-right: -4px;
+        }
+
+        .m3-profile-btn:hover { background-color: rgba(68, 68, 255, 0.1); }
+
+        /* Календарь */
+        .calendar-scroll {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            gap: 12px;
+            padding: 4px 0;
+        }
+
+        .calendar-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .day-card {
+            min-width: 45px;
+            height: 55px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: 2px solid transparent;
+        }
+
+        .day-card.today {
+            background-color: #0000FF;
+            color: white;
+        }
+
+        .day-card.selected {
+            border-color: #0000FF;
+        }
+
+        .day-name {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+            opacity: 0.6;
+            margin-bottom: 2px;
+        }
+
+        .day-card.today .day-name { opacity: 0.9; }
+
+        .day-number {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        /* Banner */
+        .m3-banner {
+            background-color: #0000FF;
+            border-radius: 28px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding: 20px 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 255, 0.25);
+            max-width: 500px;
+            margin: 8px auto 24px;
+        }
+
+        .m3-banner-bg-icon {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 70px;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .m3-icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        /* Стили новой секции слотов */
+        .slots-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 350px; /* Увеличена высота для стабильности при загрузке */
+            position: relative;
+        }
+
+        .slot-group {
+            background: #131314;
+            border-radius: 24px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .slot-card {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            margin-bottom: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .slot-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .slot-icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .icon-planned {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .icon-available {
+            background: rgba(68, 68, 255, 0.1);
+            color: #4444FF;
+        }
+
+        .slot-info {
+            flex-grow: 1;
+        }
+
+        .slot-time {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .slot-label {
+            font-size: 11px;
+            color: #888;
+            margin-top: 1px;
+        }
+
+        .btn-schedule {
+            background-color: #0000FF;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-schedule:active {
+            opacity: 0.8;
+        }
+
+        .btn-arrow {
+            color: rgba(255, 255, 255, 0.4);
+            transition: color 0.2s;
+        }
+
+        .btn-arrow:active {
+            color: #ffffff;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* --- ИНТЕГРАЦИЯ СПИНЕРА (CSS из второго кода) --- */
+        
+        .spinner-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 300px; /* Высота зоны загрузки */
+        }
+
+        .spinner {
+            width: 42px;
+            height: 42px;
+            animation: rotate-container 2.4s linear infinite;
+        }
+
+        .spinner svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .spinner circle {
+            fill: none;
+            stroke: #a8c7fa; /* Цвет из второго кода */
+            stroke-width: 4.5;
+            stroke-linecap: round;
+            animation: dash-sync 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes rotate-container {
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes dash-sync {
+            0% {
+                stroke-dasharray: 1, 150;
+                stroke-dashoffset: 0;
+            }
+            50% {
+                stroke-dasharray: 100, 150;
+                stroke-dashoffset: -15;
+            }
+            100% {
+                stroke-dasharray: 1, 150;
+                stroke-dashoffset: -125;
+            }
+        }
+
+        /* Анимация появления контента */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Стили улучшенной заглушки (БЕЗ ФОНОВОГО БЛОКА) */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px; /* Сохраняем высоту для центрирования */
+            text-align: center;
+            /* Убраны border и background */
+        }
+        
+        .empty-icon {
+            font-size: 80px !important;
+            color: #0000FF; /* Синий цвет */
+            margin-bottom: 12px;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+
+        .empty-desc {
+            font-size: 13px;
+            color: #888888;
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Шапка приложения -->
+    <header class="header-container w-full p-4 pb-6">
+        <div class="max-w-7xl mx-auto flex flex-col gap-4">
+            
+            <div class="flex justify-between items-start">
+                <div id="connection-status" class="status-pill cursor-pointer select-none">
+                    <span id="status-indicator" class="status-dot status-active"></span>
+                    <span id="status-text" class="text-[10px] font-medium text-gray-300">Соединение активно</span>
+                </div>
+
+                <div class="m3-profile-btn">
+                    <span class="material-symbols-outlined">account_circle</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0000FF] to-[#4444FF] flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    MC
+                </div>
+                <div class="flex flex-col">
+                    <h1 class="text-base font-bold text-white leading-tight">Matthew Clements</h1>
+                    <p class="text-[11px] text-gray-500 font-medium">matthew.clements@gmail.com</p>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <h2 class="text-sm font-semibold text-gray-300 mb-3 ml-1">Календарь слотов</h2>
+                <div id="calendar" class="calendar-scroll">
+                    <!-- Дни генерируются через JS -->
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 flex flex-col items-center">
+        <!-- Блок "Как начать работу" -->
+        <section class="m3-banner w-full">
+            <span class="material-symbols-outlined m3-banner-bg-icon -top-2 -right-2" style="transform: rotate(15deg);">calendar_month</span>
+            <span class="material-symbols-outlined m3-banner-bg-icon -bottom-4 -left-2" style="font-size: 50px; transform: rotate(-10deg); opacity: 0.05;">event</span>
+            
+            <div class="relative z-10 flex-grow pr-4">
+                <h2 class="text-lg font-bold text-white tracking-tight leading-tight">Как начать работу</h2>
+                <p class="text-blue-100 text-[11px] mt-0.5 font-medium opacity-80 leading-snug">Выбор слотов и выходы на смены</p>
+            </div>
+
+            <button class="m3-icon-btn relative z-10" aria-label="Подробнее">
+                <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+            </button>
+        </section>
+
+        <!-- Секция слотов (Динамическая) -->
+        <div id="slots-wrapper" class="slots-container w-full">
+            <!-- Контент (спинер или слоты) вставляется через JS -->
+        </div>
+
+    </main>
+
+    <script>
+        const calendarContainer = document.getElementById('calendar');
+        const statusDot = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const slotsWrapper = document.getElementById('slots-wrapper');
+        
+        const statuses = [
+            { text: 'Соединение активно', class: 'status-active' },
+            { text: 'Подключение', class: 'status-connecting' },
+            { text: 'Нет подключения', class: 'status-disconnected' }
+        ];
+        let currentStatusIdx = 0;
+
+        document.getElementById('connection-status').addEventListener('click', () => {
+            currentStatusIdx = (currentStatusIdx + 1) % statuses.length;
+            const s = statuses[currentStatusIdx];
+            statusDot.className = 'status-dot ' + s.class;
+            statusText.innerText = s.text;
+        });
+
+        // HTML строка спинера (без текста, оригинальный цвет)
+        const spinnerHTML = `
+            <div class="spinner-wrapper">
+                <div class="spinner">
+                    <svg viewBox="0 0 50 50">
+                        <circle cx="25" cy="25" r="20"></circle>
+                    </svg>
+                </div>
+            </div>
+        `;
+
+        // Функция рендеринга слотов с имитацией загрузки
+        function renderSlots(dayIndex) {
+            // 1. Сразу показываем спиннер
+            slotsWrapper.innerHTML = spinnerHTML;
+            slotsWrapper.classList.remove('fade-in');
+
+            // 2. Имитируем задержку сети (например, 700мс)
+            setTimeout(() => {
+                showContent(dayIndex);
+            }, 700);
+        }
+
+        // Функция отображения контента после загрузки
+        function showContent(dayIndex) {
+            slotsWrapper.innerHTML = '';
+            slotsWrapper.classList.add('fade-in');
+
+            // Логика: Четные дни имеют слоты, нечетные - пустые.
+            const hasSlots = (dayIndex % 2 === 0);
+
+            if (hasSlots) {
+                // Генерация HTML со слотами
+                slotsWrapper.innerHTML = `
+                    <div class="mb-2 ml-1">
+                        <h3 class="text-[12px] font-bold text-gray-400 tracking-wider">Запланировано</h3>
+                    </div>
+                    <div class="slot-group">
+                        <div class="slot-card">
+                            <div class="slot-icon-box icon-planned">
+                                <span class="material-symbols-outlined">event_available</span>
+                            </div>
+                            <div class="slot-info">
+                                <div class="slot-time">09:00 — 14:00</div>
+                                <div class="slot-label">Утренняя смена</div>
+                            </div>
+                            <button class="btn-arrow">
+                                <span class="material-symbols-outlined">chevron_right</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-2 ml-1 mt-6">
+                        <h3 class="text-[12px] font-bold text-gray-400 tracking-wider">Доступно для записи</h3>
+                    </div>
+                    <div class="slot-group">
+                        <div class="slot-card">
+                            <div class="slot-icon-box icon-available">
+                                <span class="material-symbols-outlined">more_time</span>
+                            </div>
+                            <div class="slot-info">
+                                <div class="slot-time">14:00 — 18:00</div>
+                                <div class="slot-label">Дневная смена</div>
+                            </div>
+                            <button class="btn-schedule">
+                                Запланировать
+                            </button>
+                        </div>
+                        <div class="slot-card">
+                            <div class="slot-icon-box icon-available">
+                                <span class="material-symbols-outlined">more_time</span>
+                            </div>
+                            <div class="slot-info">
+                                <div class="slot-time">22:00 — 02:00</div>
+                                <div class="slot-label">Ночная смена</div>
+                            </div>
+                            <button class="btn-schedule">
+                                Запланировать
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Генерация УЛУЧШЕННОЙ заглушки (Чистая, без блока, синий значок)
+                slotsWrapper.innerHTML = `
+                    <div class="empty-state">
+                        <span class="material-symbols-outlined empty-icon">calendar_month</span>
+                        <h3 class="empty-title">Нет доступных слотов</h3>
+                        <p class="empty-desc">На выбранную дату расписание пока не сформировано.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function generateCalendar() {
+            const today = new Date();
+            const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+            
+            // Запуск загрузки для сегодняшнего дня при старте приложения
+            renderSlots(0);
+
+            for (let i = 0; i < 30; i++) {
+                const currentDate = new Date();
+                currentDate.setDate(today.getDate() + i);
+                
+                const dayName = daysShort[currentDate.getDay()];
+                const dayNumber = currentDate.getDate();
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card';
+                
+                if (i === 0) dayCard.classList.add('today');
+
+                dayCard.innerHTML = `
+                    <span class="day-name">${dayName}</span>
+                    <span class="day-number">${dayNumber}</span>
+                `;
+
+                // Обработчик клика
+                dayCard.addEventListener('click', () => {
+                    // Визуальное выделение дня
+                    document.querySelectorAll('.day-card').forEach(c => c.classList.remove('selected'));
+                    dayCard.classList.add('selected');
+                    
+                    // Запуск логики загрузки и обновления
+                    renderSlots(i);
+                });
+
+                calendarContainer.appendChild(dayCard);
+            }
+        }
+
+        window.onload = generateCalendar;
+    </script>
+</body>
+</html>

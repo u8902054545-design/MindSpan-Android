@@ -1,0 +1,53 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build with AAPT and DX (Manual Build)
+        run: |
+          # Создаем структуру для сборки
+          mkdir -p build/gen build/obj build/bin
+          SDK_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
+          
+          echo "Processing resources..."
+          aapt package -f -m -J build/gen -S app/src/main/res -M app/src/main/AndroidManifest.xml -I $SDK_JAR
+          
+          echo "Compiling Java..."
+          javac -d build/obj -source 1.8 -target 1.8 -cp $SDK_JAR \
+            build/gen/com/mindspan/app/R.java \
+            app/src/main/java/com/mindspan/app/MainActivity.java
+          
+          echo "Converting to DEX..."
+          d8 --output build/bin/ --lib $SDK_JAR build/obj/com/mindspan/app/*.class
+          
+          echo "Packaging APK..."
+          aapt package -f -M app/src/main/AndroidManifest.xml -S app/src/main/res -A app/src/main/assets -I $SDK_JAR -F build/bin/MindSpan-unsigned.apk build/bin/
+          
+          # Выравнивание и подпись (используем debug key по умолчанию для простоты)
+          mv build/bin/MindSpan-unsigned.apk MindSpan-debug.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindSpan-App
+          path: MindSpan-debug.apk
