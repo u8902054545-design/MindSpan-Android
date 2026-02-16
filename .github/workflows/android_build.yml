@@ -23,34 +23,36 @@ jobs:
 
       - name: Build and Sign APK
         run: |
+          # 1. Определяем пути
           SDK_JAR="${ANDROID_HOME}/platforms/android-34/android.jar"
           BUILD_TOOLS=$(ls -d ${ANDROID_HOME}/build-tools/* | tail -1)
           PATH=$PATH:$BUILD_TOOLS
           
           mkdir -p build/gen build/obj build/bin
           
-          echo "Processing resources..."
-          aapt package -f -m -J build/gen -S app/src/main/res -M app/src/main/AndroidManifest.xml -I $SDK_JAR
+          # 2. Генерация R.java и ресурсов с поддержкой современных API
+          aapt package -f -m -J build/gen -S app/src/main/res -M app/src/main/AndroidManifest.xml -I $SDK_JAR --min-sdk-version 21 --target-sdk-version 34
           
-          echo "Compiling Java..."
+          # 3. Компиляция Java
           javac -d build/obj -source 1.8 -target 1.8 -cp $SDK_JAR \
             build/gen/com/mindspan/app/R.java \
             app/src/main/java/com/mindspan/app/MainActivity.java
           
-          echo "Converting to DEX..."
-          d8 --output build/bin/ --lib $SDK_JAR build/obj/com/mindspan/app/*.class
+          # 4. Конвертация в DEX (через d8 с указанием min-api)
+          d8 --output build/bin/ --lib $SDK_JAR --min-api 21 build/obj/com/mindspan/app/*.class
           
-          echo "Packaging unsigned APK..."
+          # 5. Сборка не подписанного APK
           aapt package -f -M app/src/main/AndroidManifest.xml -S app/src/main/res -A app/src/main/assets -I $SDK_JAR -F build/bin/MindSpan-unsigned.apk build/bin/
           
-          echo "Generating debug keystore..."
+          # 6. Выравнивание (ZipAlign) - критично для совместимости
+          zipalign -v 4 build/bin/MindSpan-unsigned.apk build/bin/MindSpan-aligned.apk
+
+          # 7. Подпись
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          apksigner sign --ks debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out MindSpan-final.apk build/bin/MindSpan-aligned.apk
 
-          echo "Signing APK..."
-          apksigner sign --ks debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out MindSpan-signed.apk build/bin/MindSpan-unsigned.apk
-
-      - name: Upload Signed APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MindSpan-App
-          path: MindSpan-signed.apk
+          path: MindSpan-final.apk
